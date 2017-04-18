@@ -2,7 +2,7 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.2
+" Version:   0.3
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -39,10 +39,14 @@ function s:ExecTest(cmd)
     echo "Running... " . a:cmd
     cgetexpr system(a:cmd)
     redraw!
-    botright copen
+    if len(getqflist()) > 0
+      botright copen
+      exec "nnoremap <silent> <buffer> q :cclose<CR>"
+      exec "nnoremap <silent> <buffer> o <CR>"
+    else
+      echom "KEEP CALM and SMOKE WEED :)"
+    endif
 
-    exec "nnoremap <silent> <buffer> q :cclose<CR>"
-    exec "nnoremap <silent> <buffer> o <CR>"
     let &efm = s:oldefm
 endfunction
 
