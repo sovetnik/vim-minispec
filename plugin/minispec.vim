@@ -2,18 +2,23 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.1
+" Version:   0.2
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
 
-nmap <unique> <Leader>r <Plug>RubyFileRun
-noremap <unique> <script> <Plug>RubyFileRun :call <SID>RunSpec()<CR>
+nmap <unique> <Leader>r <Plug>FileRun
+nmap <unique> <Leader>t <Plug>TotalRun
+noremap <unique> <script> <Plug>FileRun :call <SID>RunSpec()<CR>
+noremap <unique> <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
 
-let g:rubytest_cmd_test = 'ruby %p'
+function s:RunTotal()
+    let cmd = 'rake'
+    call s:ExecTest(cmd)
+endfunction
 
 function s:RunSpec()
-    let cmd = g:rubytest_cmd_test
+    let cmd = 'ruby %p'
     let cmd = substitute(cmd, '%p', s:EscapeBackSlash(@%), 'g')
     call s:ExecTest(cmd)
 endfunction
@@ -31,9 +36,8 @@ function s:ExecTest(cmd)
     let s:oldefm = &efm
     let &efm = s:efm_minitest
 
-    let cmd = substitute(a:cmd, '%p', s:EscapeBackSlash('@%'), 'g')
-    echo "Running... " . cmd
-    cgetexpr system(cmd)
+    echo "Running... " . a:cmd
+    cgetexpr system(a:cmd)
     redraw!
     botright copen
 
