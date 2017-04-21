@@ -2,7 +2,7 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.3
+" Version:   0.4
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -13,14 +13,23 @@ noremap <unique> <script> <Plug>FileRun :call <SID>RunSpec()<CR>
 noremap <unique> <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
 
 function s:RunTotal()
-    let cmd = 'rake'
+    let cmd = 'rake test'
     call s:ExecTest(cmd)
 endfunction
 
 function s:RunSpec()
+  if expand('%') =~ '_spec.rb'
     let cmd = 'ruby %p'
     let cmd = substitute(cmd, '%p', s:EscapeBackSlash(@%), 'g')
-    call s:ExecTest(cmd)
+    let g:minispec_last_runned = cmd
+  else
+    if exists('g:minispec_last_runned')
+      let cmd = g:minispec_last_runned
+    else
+      let cmd = 'rake test'
+    endif
+  endif
+  call s:ExecTest(cmd)
 endfunction
 
 let s:efm_minitest = 
@@ -37,14 +46,15 @@ function s:ExecTest(cmd)
     let &efm = s:efm_minitest
 
     echo "Running... " . a:cmd
-    cgetexpr system(a:cmd)
+    let l:result = system(a:cmd)
+    cgetexpr l:result
     redraw!
     if len(getqflist()) > 0
       botright copen
       exec "nnoremap <silent> <buffer> q :cclose<CR>"
       exec "nnoremap <silent> <buffer> o <CR>"
     else
-      echom "KEEP CALM and SMOKE WEED :)"
+      echom matchstr(l:result, '\d* runs, .*')
     endif
 
     let &efm = s:oldefm
