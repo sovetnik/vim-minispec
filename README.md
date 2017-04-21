@@ -20,12 +20,12 @@ Plug 'sovetnik/vim-minispec'
 
 The plugin registers `<Leader>r` and `<Leader>t` in normal mode for triggering it easily. 
 
-You can use **<Leader>r**(Run spec) to run some command in order:
+You can use **Leader-r**(Run spec) to run some command in order:
 - Run current spec if filename match `*_spec.rb`
 - Run last runned spec if exists one.
 - Run all tests by 'rake test'
 
-or **<Leader>t**(run Total) anywhere in project to run all tests.
+or **Leader-t**(run Total) anywhere in project to run all tests.
 
 Additionally, if you have installed Tim Pope's [vim-unimpaired](https://github.com/tpope/vim-unimpaired), you can use **[q** and **]q** to navigate through list of errors. 
 Otherwise use `:cprevious` and `:cnext`.
