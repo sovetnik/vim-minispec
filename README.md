@@ -1,18 +1,16 @@
 # Vim Minispec
 
-The **Vim Minispec** plugin runs [Minitest](https://github.com/seattlerb/minitest) and displays the results in Vim quickfix.
-If no any errors or warnings, it echoes output last line, like: '23 tests, 42 assertions, 0 failures, 0 errors, 0 skips'
+The **Vim Minispec** plugin runs Hanami [Minitest](https://github.com/seattlerb/minitest) specs and displays the results in Vim quickfix. If no any errors or warnings, it echoes output last line, like: '23 tests, 42 assertions, 0 failures, 0 errors, 0 skips'
 
 ## Requirements
 
 If you can run your minitest file like `ruby spec/awesome_spec.rb` you can use a plugin.
-Note: your current working directory must be a project root.
-Use `:pwd` to ensure this.
+In your `.hanamirc` must exist a line `test=minitest`.
 
 ## Installation
 
 Obtain a copy of this plugin and place `minispec.vim` in your Vim plugin directory.
-Add this to your `.vimrc` or `nvim/init.vim`:
+Add to your `~/.vimrc` or `~/.config/nvim/init.vim`:
 ```
 Plug 'sovetnik/vim-minispec'
 ```
@@ -21,7 +19,10 @@ Plug 'sovetnik/vim-minispec'
 The plugin registers `<Leader>r` and `<Leader>t` in normal mode for triggering it easily. 
 
 You can use **Leader-r**(Run spec) to run some command in order:
-- Run current spec if filename match `*_spec.rb`
+- Run current spec if filename match `*_spec.rb` or have a related spec or have a related spec
+  Examples of supported files:
+  - `lib/project/entities/awesome.rb`
+  - `spec/project/entities/awesome_spec.rb`
 - Run last runned spec if exists one.
 - Run all tests by 'rake test'
 
@@ -37,5 +38,4 @@ In the quickfix window, you can use:
 
 
 ## License
-
 The Vim Minispec plugin is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
