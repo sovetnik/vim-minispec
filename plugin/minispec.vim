@@ -1,8 +1,8 @@
-" The "Vim Minispec" plugin runs Minitest spec and displays the results in Vim quickfix window.
+" The "Vim Hanami Minispec" plugin runs Minitest spec and displays the results in Vim quickfix window.
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.5
+" Version:   0.6
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -12,6 +12,7 @@ nmap <unique> <Leader>t <Plug>TotalRun
 noremap <unique> <script> <Plug>FileRun :call <SID>RunSpec()<CR>
 noremap <unique> <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
 
+let s:pattern_app =  'apps/.*\.rb'
 let s:pattern_lib =  'lib/.*\.rb'
 let s:pattern_spec = 'spec/.*_spec\.rb'
 
@@ -39,7 +40,7 @@ endfu
 fu! s:BuildCommand(path)
   if a:path =~ s:pattern_spec
     let cmd = 'ruby ' . a:path
-  elseif a:path =~ s:pattern_lib
+  elseif a:path =~ s:pattern_app || a:path =~ s:pattern_lib
     let cmd = 'ruby ' . s:PathLibToSpec(a:path)
   elseif exists('g:minispec_last_runned')
     let cmd = g:minispec_last_runned
@@ -85,10 +86,15 @@ fu! s:EnsureMinitest(path)
 endfu
 
 "If we can read .hanamirc, we know where Hanami root is
+" hanami root path or -1
 fu! s:HanamiRootPath(path)
   if match(a:path, '/lib/') > -1
     if filereadable(substitute(a:path, 'lib/.*', '.hanamirc', 'g'))
       return substitute(a:path, 'lib/.*', '', 'g')
+    endif
+  elseif match(a:path, '/apps/') > -1
+    if filereadable(substitute(a:path, 'apps/.*', '.hanamirc', 'g'))
+      return substitute(a:path, 'apps/.*', '', 'g')
     endif
   elseif match(a:path, '/spec/') > -1
     if filereadable(substitute(a:path, 'spec/.*', '.hanamirc', 'g'))
@@ -101,6 +107,7 @@ endfu
 
 fu! s:PathLibToSpec(path)
   let path = substitute(a:path, '/lib/', '/spec/', 'g')
+  let path = substitute(path, '/apps/', '/spec/', 'g')
   let path = substitute(path, '.rb', '_spec.rb', 'g')
   return path
 endfu
