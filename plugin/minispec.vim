@@ -7,10 +7,10 @@
 " License:   MIT
 " -----------------------------------------------------
 
-nmap <unique> <Leader>r <Plug>FileRun
-nmap <unique> <Leader>t <Plug>TotalRun
-noremap <unique> <script> <Plug>FileRun :call <SID>RunSpec()<CR>
-noremap <unique> <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
+nmap <Leader>r <Plug>FileRun
+nmap <Leader>t <Plug>TotalRun
+noremap <script> <Plug>FileRun :call <SID>RunSpec()<CR>
+noremap <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
 
 let s:pattern_app =  'apps/.*\.rb'
 let s:pattern_lib =  'lib/.*\.rb'
