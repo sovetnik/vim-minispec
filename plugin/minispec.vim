@@ -1,8 +1,8 @@
-" The "Vim Hanami Minispec" plugin runs Minitest spec and displays the results in Vim quickfix window.
+" The "Vim Minispec" plugin runs Minitest spec and displays the results in Vim quickfix window.
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.6
+" Version:   0.7
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -64,7 +64,7 @@ fu! s:ExecTest(cmd)
     let s:oldefm = &efm
     let &efm = s:efm_minitest
     echo "Running... " . a:cmd
-    execute "cd " . s:HanamiRootPath(expand('%:p'))
+    execute "cd " . s:RootPath(expand('%:p'))
     let l:result = system(a:cmd)
     cgetexpr l:result
     redraw!
@@ -80,25 +80,27 @@ endfu
 
 " returnes line number (usually 2) or 0 if not readable and -1 if no Minitest
 fu! s:EnsureMinitest(path)
-  if filereadable(s:HanamiRootPath(a:path) . '.hanamirc')
-    return match(readfile(s:HanamiRootPath(a:path) . '.hanamirc'), 'test=minitest')
+  if filereadable(s:RootPath(a:path) . 'spec/spec_helper.rb')
+    return match(readfile(s:RootPath(a:path) . 'spec/spec_helper.rb'), "^require 'minitest/autorun'")
+  elseif filereadable(s:RootPath(a:path) . '.hanamirc')
+    return match(readfile(s:RootPath(a:path) . '.hanamirc'), '^test=minitest')
   endif
 endfu
 
-"If we can read .hanamirc, we know where Hanami root is
-" hanami root path or -1
-fu! s:HanamiRootPath(path)
+"If we can read spec/spec_helper, we know where Gem root is
+" gem root path or -1
+fu! s:RootPath(path)
   if match(a:path, '/lib/') > -1
-    if filereadable(substitute(a:path, 'lib/.*', '.hanamirc', 'g'))
+    if filereadable(substitute(a:path, 'lib/.*', 'spec/spec_helper.rb', 'g'))
       return substitute(a:path, 'lib/.*', '', 'g')
+    endif
+  elseif match(a:path, '/spec/') > -1
+    if filereadable(substitute(a:path, 'spec/.*', 'spec/spec_helper.rb', 'g'))
+      return substitute(a:path, 'spec/.*', '', 'g')
     endif
   elseif match(a:path, '/apps/') > -1
     if filereadable(substitute(a:path, 'apps/.*', '.hanamirc', 'g'))
       return substitute(a:path, 'apps/.*', '', 'g')
-    endif
-  elseif match(a:path, '/spec/') > -1
-    if filereadable(substitute(a:path, 'spec/.*', '.hanamirc', 'g'))
-      return substitute(a:path, 'spec/.*', '', 'g')
     endif
   else
     return -1
