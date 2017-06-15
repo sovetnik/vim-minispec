@@ -2,7 +2,7 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.7
+" Version:   0.7.1
 " Copyright: Copyright (c) 2017 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -15,6 +15,7 @@ noremap <script> <Plug>TotalRun :call <SID>RunTotal()<CR>
 let s:pattern_app =  'apps/.*\.rb'
 let s:pattern_lib =  'lib/.*\.rb'
 let s:pattern_spec = 'spec/.*_spec\.rb'
+let s:pattern_result = '\d* runs, \d*.* \d* skips'
 
 fu! s:RunTotal()
   let path = expand('%:p')
@@ -73,7 +74,7 @@ fu! s:ExecTest(cmd)
       exec "nnoremap <silent> <buffer> q :cclose<CR>"
       exec "nnoremap <silent> <buffer> o <CR>"
     else
-      echom matchstr(l:result, '\d* runs, .*')
+      echom 'Result: ' matchstr(l:result, s:pattern_result)
     endif
     let &efm = s:oldefm
 endfu
