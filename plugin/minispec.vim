@@ -2,8 +2,8 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.7.2
-" Copyright: Copyright (c) 2017 Oleg Siniuk
+" Version:   0.8.0
+" Copyright: Copyright (c) 2017-2019 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
 
@@ -54,7 +54,8 @@ endfu
 
 " errorformat for standart minitest output
 let s:efm_minitest = 
-      \ '%E\ \ %n)\ Error:,'
+      \  '%f:%l: %m,'
+      \. '%E\ \ %n)\ Error:,'
       \. '%W\ \ %n)\ Failure:,'
       \. '%C%m\ [%f:%l]:,'
       \. '%Z\ %f:%l:in\ %m,'
@@ -63,23 +64,69 @@ let s:efm_minitest =
       \. '%-G%.%#,'
 
 fu! s:ExecTest(cmd)
-    let s:oldefm = &efm
-    let &efm = s:efm_minitest
-    echo "Running... " . a:cmd
-    execute "cd " . s:RootPath(expand('%:p'))
-    let l:result = system(a:cmd)
-    cgetexpr l:result
-    redraw!
-    if len(getqflist()) > 0
-      botright copen
-      exec "nnoremap <silent> <buffer> q :cclose<CR>"
-      exec "nnoremap <silent> <buffer> o <CR>"
-    else
-      echomsg 'Result: ' 
-            \. matchstr(l:result, s:pattern_result) 
-            \. matchstr(l:result, s:pattern_time)
-    endif
-    let &efm = s:oldefm
+  let s:oldefm = &efm
+  let &efm = s:efm_minitest
+  echo "Running... " . a:cmd
+  execute "cd " . s:RootPath(expand('%:p'))
+
+  " clean quickfix list before run
+  cgetexpr []
+
+  " run async if has nvim job control
+  if has('nvim')
+    call jobstart(['bash', '-c', a:cmd], {
+          \ 'on_stdout': function('s:OnStdout'),
+          \ 'on_stderr': function('s:OnError'),
+          \ 'on_exit': function('s:OnExit')
+          \ } )
+  else
+    s:FallbackToBlocking(a:cmd)
+  endif
+endfu
+
+fu! s:FallbackToBlocking(cmd)
+  let l:result = system(a:cmd)
+  cgetexpr l:result
+  redraw!
+  if len(getqflist()) > 0
+    botright copen
+    exec "nnoremap <silent> <buffer> q :cclose<CR>"
+    exec "nnoremap <silent> <buffer> o <CR>"
+  endif
+  echomsg 'Result: ' 
+        \. matchstr(l:result, s:pattern_result) 
+        \. '. '
+        \. matchstr(l:result, s:pattern_time)
+  let &efm = s:oldefm
+endfu
+
+fu! s:OnStdout(job_id, data, event) dict 
+  caddexpr a:data
+  " call append(line('$'), '###### OnStdout')
+  if empty(matchstr(a:data, s:pattern_result)) < 1
+    echomsg 'Result: ' 
+          \. matchstr(a:data, s:pattern_result) 
+          \. '. '
+          \. matchstr(a:data, s:pattern_time)
+  endif
+endfu
+
+fu! s:OnError(job_id, data, event) dict 
+  " caddexpr a:data
+  " call append(line('$'), '###### OnError
+  if empty(a:data[0]) < 1
+    echomsg 'Fatal: ' . a:data[0]
+  endif
+endfu
+
+fu! s:OnExit(job_id, data, event) dict 
+  " call append(line('$'), '###### OnExit')
+  if len(getqflist()) > 0
+    botright copen
+    exec "nnoremap <silent> <buffer> q :cclose<CR>"
+    exec "nnoremap <silent> <buffer> o <CR>"
+  endif
+  let &efm = s:oldefm
 endfu
 
 " returnes line number (usually 2) or 0 if not readable and -1 if no Minitest
