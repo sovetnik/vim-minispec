@@ -2,7 +2,7 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.8.0
+" Version:   0.8.1
 " Copyright: Copyright (c) 2017-2019 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -17,6 +17,9 @@ let s:pattern_lib =  'lib/.*\.rb'
 let s:pattern_spec = 'spec/.*_spec\.rb'
 let s:pattern_result = '\d* runs, \d*.* \d* skips'
 let s:pattern_time = '\vFinished\zs in \d*.\d*s'
+
+hi GreenBar term=reverse ctermfg=white ctermbg=green guifg=white guibg=green
+hi RedBar   term=reverse ctermfg=white ctermbg=red guifg=white guibg=red
 
 fu! s:RunTotal()
   let path = expand('%:p')
@@ -60,12 +63,13 @@ let s:efm_minitest =
       \. '%C%m\ [%f:%l]:,'
       \. '%Z\ %f:%l:in\ %m,'
       \. '%C%m,'
-      \. '%Z%m,'
+      \. '%-Z%m,'
       \. '%-G%.%#,'
 
 fu! s:ExecTest(cmd)
   let s:oldefm = &efm
   let &efm = s:efm_minitest
+  let s:message_frozen = 0
   echo "Running... " . a:cmd
   execute "cd " . s:RootPath(expand('%:p'))
 
@@ -84,30 +88,20 @@ fu! s:ExecTest(cmd)
   endif
 endfu
 
-fu! s:FallbackToBlocking(cmd)
-  let l:result = system(a:cmd)
-  cgetexpr l:result
-  redraw!
-  if len(getqflist()) > 0
-    botright copen
-    exec "nnoremap <silent> <buffer> q :cclose<CR>"
-    exec "nnoremap <silent> <buffer> o <CR>"
-  endif
-  echomsg 'Result: ' 
-        \. matchstr(l:result, s:pattern_result) 
-        \. '. '
-        \. matchstr(l:result, s:pattern_time)
-  let &efm = s:oldefm
-endfu
-
 fu! s:OnStdout(job_id, data, event) dict 
   caddexpr a:data
   " call append(line('$'), '###### OnStdout')
   if empty(matchstr(a:data, s:pattern_result)) < 1
-    echomsg 'Result: ' 
+    if len(getqflist()) > 0
+      let s:color_bar = 'red'
+    else
+      let s:color_bar = 'green'
+    endif
+    let s:message = 'Result: ' 
           \. matchstr(a:data, s:pattern_result) 
           \. '. '
           \. matchstr(a:data, s:pattern_time)
+    let s:message_frozen = 1
   endif
 endfu
 
@@ -115,7 +109,10 @@ fu! s:OnError(job_id, data, event) dict
   " caddexpr a:data
   " call append(line('$'), '###### OnError
   if empty(a:data[0]) < 1
-    echomsg 'Fatal: ' . a:data[0]
+    if s:message_frozen == 0
+      let s:color_bar = 'red'
+      let s:message = 'Fatal: ' . a:data[0]
+    endif
   endif
 endfu
 
@@ -126,7 +123,41 @@ fu! s:OnExit(job_id, data, event) dict
     exec "nnoremap <silent> <buffer> q :cclose<CR>"
     exec "nnoremap <silent> <buffer> o <CR>"
   endif
+  " flash message with color_bar for 420 ms
+  if s:color_bar == 'green'
+    echohl GreenBar
+  else
+    echohl RedBar
+  endif
+  echomsg s:message
   let &efm = s:oldefm
+  sleep 420m
+  " replace with non-highlighted message
+  echohl None
+  echomsg s:message
+endfu
+
+fu! s:FallbackToBlocking(cmd)
+  let l:result = system(a:cmd)
+  cgetexpr l:result
+  redraw!
+  if len(getqflist()) > 0
+    botright copen
+    exec "nnoremap <silent> <buffer> q :cclose<CR>"
+    exec "nnoremap <silent> <buffer> o <CR>"
+    echohl RedBar
+  else
+    echohl GreenBar
+  endif
+  let s:message = 'Result: ' 
+        \. matchstr(l:result, s:pattern_result) 
+        \. '. '
+        \. matchstr(l:result, s:pattern_time)
+  echomsg s:message
+  sleep 420m
+  let &efm = s:oldefm
+  echohl None
+  echomsg s:message
 endfu
 
 " returnes line number (usually 2) or 0 if not readable and -1 if no Minitest
