@@ -122,6 +122,8 @@ fu! s:OnExit(job_id, data, event) dict
     botright copen
     exec "nnoremap <silent> <buffer> q :cclose<CR>"
     exec "nnoremap <silent> <buffer> o <CR>"
+  else
+    cclose
   endif
   " flash message with color_bar for 420 ms
   if s:color_bar == 'green'
