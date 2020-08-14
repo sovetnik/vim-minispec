@@ -2,7 +2,7 @@
 "
 " Author:    Oleg 'Sovetnik' Siniuk
 " URL:       https://github.com/sovetnik/vim-minispec
-" Version:   0.8.1
+" Version:   0.8.2
 " Copyright: Copyright (c) 2017-2019 Oleg Siniuk
 " License:   MIT
 " -----------------------------------------------------
@@ -24,7 +24,7 @@ hi RedBar   term=reverse ctermfg=white ctermbg=red guifg=white guibg=red
 fu! s:RunTotal()
   let path = expand('%:p')
   if s:EnsureMinitest(path) > 0
-    let cmd = 'rake test'
+    let cmd = 'bundle exec rake test'
     call s:ExecTest(cmd)
   else 
     echom 'Cannot find minispec to run'
@@ -78,6 +78,7 @@ fu! s:ExecTest(cmd)
 
   " run async if has nvim job control
   if has('nvim')
+    " call jobstart(['rvm', 'in', s:RootPath(expand('%:p')), 'do', ] + a:cmd, 
     call jobstart(['bash', '-c', a:cmd], {
           \ 'on_stdout': function('s:OnStdout'),
           \ 'on_stderr': function('s:OnError'),
